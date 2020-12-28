@@ -1,54 +1,64 @@
 use ::log::error;
-use ::std::{
-	error::Error,
-	net::{IpAddr, SocketAddr},
-};
-use ::tokio::net::TcpListener;
+use ::std::{error::Error, net::SocketAddr};
+use ::tokio::{self, net::TcpListener};
 
+use crate::config::Config;
 use crate::connection::Connection;
-use crate::status;
-use crate::types::java::VarInt;
+use crate::types::modern::VarInt;
+use crate::{protocol, status};
 
 pub struct Server {
 	java: TcpListener,
 }
 
 impl Server {
-	pub async fn listen(&mut self) -> Result<(), Box<dyn Error>> {
+	pub async fn listen(&mut self, config: &Config) -> Result<(), Box<dyn Error>> {
 		loop {
 			match self.java.accept().await {
-				Ok((sock, addr)) => {
-					let connection = Connection::java(sock).await;
-					let Connection::Java(mut java) = connection;
-					let length: i32 = java.read::<VarInt>().await?.into();
-					if length == 0xFE {
-						// TODO: Handle legacy handshakes
-					} else {
-						let id: i32 = java.read::<VarInt>().await?.into();
-						let version: i32 = java.read::<VarInt>().await?.into();
-						let address = java.read::<String>().await?;
-						let port = java.read::<u16>().await?;
-						let next: i32 = java.read::<VarInt>().await?.into();
-						if id == 0 {
-							if next == 1 {
-								status::modern(&mut java).await?;
-							} else if next == 2 {
-								// TODO: Join the game
-							} else {
-								// ...
+				Ok((sock, _addr)) => {
+					let config = config.clone();
+					tokio::spawn(async move {
+						let connection = Connection::java(sock).await.unwrap();
+						match connection {
+							Connection::Classic(mut conn) => {
+								let id = conn.read::<u8>().await.unwrap();
+								if id == 0xFE {
+									status::classic(&mut conn, &config).await.unwrap();
+								} else if id == 0x00 {
+									// TODO: Join the game
+								}
 							}
-						} else {
-							// ...
+							Connection::Modern(mut conn) => {
+								let _length: i32 = conn.read::<VarInt>().await.unwrap().into();
+								let id: i32 = conn.read::<VarInt>().await.unwrap().into();
+								let version: i32 = conn.read::<VarInt>().await.unwrap().into();
+								let _address = conn.read::<String>().await.unwrap();
+								let _port = conn.read::<u16>().await.unwrap();
+								let next: i32 = conn.read::<VarInt>().await.unwrap().into();
+								if id == 0 {
+									if next == 1 {
+										status::modern(&mut conn, &config, version).await.unwrap();
+									} else if next == 2 {
+										protocol::modern::handle(conn, &config, version)
+											.await
+											.unwrap();
+									} else {
+										// ...
+									}
+								} else {
+									// ...
+								}
+							}
 						}
-					}
+					});
 				}
 				Err(e) => error!("Connection dropped: {:?}", e),
 			}
 		}
 	}
 
-	pub async fn new(addr: IpAddr) -> Result<Self, Box<dyn Error>> {
-		let jaddr = SocketAddr::new(addr, 25565);
+	pub async fn new(config: &Config) -> Result<Self, Box<dyn Error>> {
+		let jaddr = SocketAddr::new(config.network.bind.parse().unwrap(), config.network.port);
 		let java = TcpListener::bind(jaddr).await?;
 		Ok(Self { java })
 	}

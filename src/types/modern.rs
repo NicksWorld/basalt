@@ -8,17 +8,22 @@ use ::tokio::io::{AsyncReadExt, AsyncWriteExt};
 use crate::types::BasaltError;
 
 #[async_trait]
-pub trait JavaEncodable {
+pub trait ModernEncodable {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self>
 	where
 		Self: Sized;
+	async fn size(&self) -> usize;
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()>;
 }
 
 #[async_trait]
-impl JavaEncodable for bool {
+impl ModernEncodable for bool {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		Ok(stream.read_u8().await? != 0)
+	}
+
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
@@ -28,13 +33,17 @@ impl JavaEncodable for bool {
 }
 
 #[async_trait]
-impl JavaEncodable for f32 {
+impl ModernEncodable for f32 {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		let mut buffer = [0; 4];
 		stream.read(&mut buffer).await?;
 		Ok(f32::from_be_bytes(buffer))
 	}
 
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
+	}
+
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
 		let buffer = self.to_be_bytes();
 		stream.write(&buffer).await?;
@@ -43,13 +52,17 @@ impl JavaEncodable for f32 {
 }
 
 #[async_trait]
-impl JavaEncodable for f64 {
+impl ModernEncodable for f64 {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		let mut buffer = [0; 8];
 		stream.read(&mut buffer).await?;
 		Ok(f64::from_be_bytes(buffer))
 	}
 
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
+	}
+
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
 		let buffer = self.to_be_bytes();
 		stream.write(&buffer).await?;
@@ -58,9 +71,13 @@ impl JavaEncodable for f64 {
 }
 
 #[async_trait]
-impl JavaEncodable for i8 {
+impl ModernEncodable for i8 {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		Ok(stream.read_i8().await?)
+	}
+
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
@@ -70,9 +87,13 @@ impl JavaEncodable for i8 {
 }
 
 #[async_trait]
-impl JavaEncodable for i16 {
+impl ModernEncodable for i16 {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		Ok(stream.read_i16().await?)
+	}
+
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
@@ -82,9 +103,13 @@ impl JavaEncodable for i16 {
 }
 
 #[async_trait]
-impl JavaEncodable for i32 {
+impl ModernEncodable for i32 {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		Ok(stream.read_i32().await?)
+	}
+
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
@@ -94,9 +119,13 @@ impl JavaEncodable for i32 {
 }
 
 #[async_trait]
-impl JavaEncodable for i64 {
+impl ModernEncodable for i64 {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		Ok(stream.read_i64().await?)
+	}
+
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
@@ -106,7 +135,7 @@ impl JavaEncodable for i64 {
 }
 
 #[async_trait]
-impl JavaEncodable for String {
+impl ModernEncodable for String {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		let length = VarInt::read(stream).await?.raw;
 		let mut count = 0;
@@ -124,6 +153,15 @@ impl JavaEncodable for String {
 		}
 	}
 
+	async fn size(&self) -> usize {
+		let mut total = 0;
+		let length = VarInt::from(self.len() as i32);
+		let body = self.len();
+		total += length.size().await;
+		total += body;
+		total
+	}
+
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
 		let length = VarInt::from(self.len() as i32);
 		let raw = self.as_bytes();
@@ -134,9 +172,13 @@ impl JavaEncodable for String {
 }
 
 #[async_trait]
-impl JavaEncodable for u8 {
+impl ModernEncodable for u8 {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		Ok(stream.read_u8().await?)
+	}
+
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
@@ -146,9 +188,13 @@ impl JavaEncodable for u8 {
 }
 
 #[async_trait]
-impl JavaEncodable for u16 {
+impl ModernEncodable for u16 {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		Ok(stream.read_u16().await?)
+	}
+
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
@@ -158,9 +204,13 @@ impl JavaEncodable for u16 {
 }
 
 #[async_trait]
-impl JavaEncodable for u128 {
+impl ModernEncodable for u128 {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		Ok(stream.read_u128().await?)
+	}
+
+	async fn size(&self) -> usize {
+		mem::size_of::<Self>()
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
@@ -170,7 +220,7 @@ impl JavaEncodable for u128 {
 }
 
 pub struct VarInt {
-	raw: i32,
+	pub raw: i32,
 }
 
 impl From<i32> for VarInt {
@@ -186,7 +236,7 @@ impl Into<i32> for VarInt {
 }
 
 #[async_trait]
-impl JavaEncodable for VarInt {
+impl ModernEncodable for VarInt {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		let mut count = 0;
 		let mut result = 0;
@@ -209,6 +259,17 @@ impl JavaEncodable for VarInt {
 		})
 	}
 
+	async fn size(&self) -> usize {
+		let mut temp = self.raw;
+		let mut count = 0;
+		while {
+			temp >>= 7;
+			count += 1;
+			temp != 0
+		} {}
+		count
+	}
+
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
 		let mut value = self.raw;
 		while {
@@ -225,7 +286,7 @@ impl JavaEncodable for VarInt {
 }
 
 pub struct VarLong {
-	raw: i64,
+	pub raw: i64,
 }
 
 impl From<i64> for VarLong {
@@ -241,7 +302,7 @@ impl Into<i64> for VarLong {
 }
 
 #[async_trait]
-impl JavaEncodable for VarLong {
+impl ModernEncodable for VarLong {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
 		let mut count = 0;
 		let mut result = 0;
@@ -262,6 +323,17 @@ impl JavaEncodable for VarLong {
 		Ok(Self {
 			raw: unsafe { mem::transmute(result) },
 		})
+	}
+
+	async fn size(&self) -> usize {
+		let mut temp = self.raw;
+		let mut count = 0;
+		while {
+			temp >>= 7;
+			count += 1;
+			temp != 0
+		} {}
+		count
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {

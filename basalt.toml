@@ -1,0 +1,13 @@
+[minecraft]
+max_players = -1
+motd = "Hello from basalt.toml!"
+
+[network]
+bind = "0.0.0.0"
+port = 25565
+
+[whitelist]
+enabled = false
+list = [
+	"cbpudding"
+]

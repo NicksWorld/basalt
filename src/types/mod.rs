@@ -3,7 +3,8 @@ use ::std::{
 	fmt::{self, Display, Formatter},
 };
 
-pub mod java;
+pub mod classic;
+pub mod modern;
 
 #[derive(Debug)]
 pub struct BasaltError {
