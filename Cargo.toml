@@ -1,0 +1,16 @@
+[package]
+name = "basalt"
+version = "0.1.0"
+authors = ["Alexander Hill <CodeBreadpudding@gmail.com>"]
+edition = "2018"
+description = "A cross-platform Minecraft server written in Rust"
+repository = "https://github.com/cbpudding/basalt"
+license = "0BSD"
+keywords = ["minecraft"]
+
+[dependencies]
+async-trait = "0.1.42"
+chrono = "0.4.19"
+fern = "0.6.0"
+log = "0.4.11"
+tokio = { version = "1.0.1", features = ["io-util", "macros", "net", "rt-multi-thread"] }
