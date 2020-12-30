@@ -2,12 +2,16 @@ use ::log::error;
 use ::std::{error::Error, net::SocketAddr};
 use ::tokio::{self, net::TcpListener};
 
-use crate::config::Config;
-use crate::connection::Connection;
-use crate::types::modern::VarInt;
-use crate::{protocol, status};
+use crate::{
+	auth::Authentication,
+	config::Config,
+	connection::Connection,
+	modern::{self, types::VarInt},
+	status,
+};
 
 pub struct Server {
+	auth: Authentication,
 	java: TcpListener,
 }
 
@@ -39,9 +43,8 @@ impl Server {
 									if next == 1 {
 										status::modern(&mut conn, &config, version).await.unwrap();
 									} else if next == 2 {
-										protocol::modern::handle(conn, &config, version)
-											.await
-											.unwrap();
+										modern::handler(conn, &config, version)
+											.await;
 									} else {
 										// ...
 									}
@@ -58,8 +61,12 @@ impl Server {
 	}
 
 	pub async fn new(config: &Config) -> Result<Self, Box<dyn Error>> {
+		let auth = Authentication::new(config).await?;
 		let jaddr = SocketAddr::new(config.network.bind.parse().unwrap(), config.network.port);
 		let java = TcpListener::bind(jaddr).await?;
-		Ok(Self { java })
+		Ok(Self {
+			auth,
+			java,
+		})
 	}
 }

@@ -3,9 +3,11 @@ use ::fern::Dispatch;
 use ::log::LevelFilter;
 use ::std::io;
 
+mod auth;
+mod classic;
 mod config;
 mod connection;
-mod protocol;
+mod modern;
 mod server;
 mod status;
 mod types;
@@ -18,9 +20,10 @@ async fn main() {
 	Dispatch::new()
 		.format(|out, msg, record| {
 			out.finish(format_args!(
-				"[{}][{}] {}",
+				"[{}][{}][{}] {}",
 				Local::now().format("%H:%M:%S%.3f"),
 				record.level(),
+				record.target(),
 				msg
 			))
 		})

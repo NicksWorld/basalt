@@ -6,7 +6,22 @@ use ::std::{
 };
 
 #[derive(Clone, Deserialize)]
+pub struct Authentication {
+	pub legacy: AuthenticationMethod,
+	pub microsoft: AuthenticationMethod,
+	pub required: bool,
+	pub yggdrasil: AuthenticationMethod,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct AuthenticationMethod {
+	pub enabled: bool,
+	pub url: String,
+}
+
+#[derive(Clone, Deserialize)]
 pub struct Config {
+	pub authentication: Authentication,
 	pub minecraft: Minecraft,
 	pub network: Network,
 	pub whitelist: Whitelist,

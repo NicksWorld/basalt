@@ -1,10 +1,8 @@
+use ::async_trait::async_trait;
 use ::std::{
 	error::Error,
 	fmt::{self, Display, Formatter},
 };
-
-pub mod classic;
-pub mod modern;
 
 #[derive(Debug)]
 pub struct BasaltError {
@@ -24,3 +22,6 @@ impl Display for BasaltError {
 }
 
 impl Error for BasaltError {}
+
+#[async_trait]
+pub trait ProtocolHandler {}

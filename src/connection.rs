@@ -4,7 +4,7 @@ use ::tokio::{
 	net::TcpStream,
 };
 
-use crate::types::{classic::ClassicEncodable, modern::ModernEncodable};
+use crate::{classic::types::ClassicEncodable, modern::types::ModernEncodable};
 
 pub enum Connection {
 	Classic(ClassicConnection),

@@ -1,3 +1,18 @@
+[authentication]
+required = true
+
+[authentication.legacy]
+enabled = false
+url = "https://login.minecraft.net"
+
+[authentication.microsoft]
+enabled = false
+url = ""
+
+[authentication.yggdrasil]
+enabled = true
+url = "https://authserver.mojang.com"
+
 [minecraft]
 max_players = -1
 motd = "Hello from basalt.toml!"

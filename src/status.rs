@@ -5,13 +5,13 @@ use crate::config::Config;
 use crate::connection::{ClassicConnection, ModernConnection};
 
 pub async fn classic(conn: &mut ClassicConnection, config: &Config) -> Result<()> {
-	use crate::types::classic::ClassicEncodable;
+	use crate::classic::types::ClassicEncodable;
 	todo!();
 	Ok(())
 }
 
 pub async fn modern(conn: &mut ModernConnection, config: &Config, version: i32) -> Result<()> {
-	use crate::types::modern::{ModernEncodable, VarInt};
+	use crate::modern::types::{ModernEncodable, VarInt};
 	'status: loop {
 		let length = conn.read::<VarInt>().await?;
 		let id = conn.read::<VarInt>().await?;

@@ -4,6 +4,7 @@ use ::std::{
 	mem,
 };
 use ::tokio::io::{AsyncReadExt, AsyncWriteExt};
+use ::uuid::Uuid;
 
 use crate::types::BasaltError;
 
@@ -204,9 +205,9 @@ impl ModernEncodable for u16 {
 }
 
 #[async_trait]
-impl ModernEncodable for u128 {
+impl ModernEncodable for Uuid {
 	async fn read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> {
-		Ok(stream.read_u128().await?)
+		Ok(Uuid::from_u128(stream.read_u128().await?))
 	}
 
 	async fn size(&self) -> usize {
@@ -214,7 +215,7 @@ impl ModernEncodable for u128 {
 	}
 
 	async fn write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()> {
-		stream.write_u128(*self).await?;
+		stream.write_u128(self.as_u128()).await?;
 		Ok(())
 	}
 }
