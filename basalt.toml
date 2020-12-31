@@ -14,8 +14,8 @@ enabled = true
 url = "https://authserver.mojang.com"
 
 [minecraft]
-max_players = -1
-motd = "Hello from basalt.toml!"
+max_players = 20
+motd = "A Minecraft Server"
 
 [network]
 bind = "0.0.0.0"

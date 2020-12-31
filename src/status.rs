@@ -14,6 +14,11 @@ pub async fn classic(conn: &mut TcpStream, config: &Config) -> Result<()> {
 
 pub async fn modern(conn: &mut TcpStream, config: &Config, version: i32) -> Result<()> {
 	use crate::modern::types::{ModernEncodable, VarInt};
+	let version = if crate::modern::supported(version) {
+		version
+	} else {
+		0
+	};
 	'status: loop {
 		let length = VarInt::async_read(conn).await?;
 		let id = VarInt::async_read(conn).await?;
@@ -42,8 +47,10 @@ pub async fn modern(conn: &mut TcpStream, config: &Config, version: i32) -> Resu
 			}
 			1 => {
 				let payload = i64::async_read(conn).await?;
-				id.async_write(conn).await?;
-				payload.async_write(conn).await?;
+				let mut buffer = Vec::new();
+				id.async_write(&mut buffer).await?;
+				payload.async_write(&mut buffer).await?;
+				conn.write_all(&util::prepend_length(buffer)).await?;
 				break 'status;
 			}
 			_ => {}

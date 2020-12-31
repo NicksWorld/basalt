@@ -1,5 +1,4 @@
 use ::async_trait::async_trait;
-use ::std::io::Result;
 use ::tokio::net::TcpStream;
 
 use crate::{
@@ -7,8 +6,11 @@ use crate::{
 	types::ProtocolHandler,
 };
 
+mod dummy;
 pub mod types;
 mod v754;
+
+use dummy::DummyHandler;
 
 pub use v754::V754;
 
@@ -24,22 +26,8 @@ pub async fn handler(conn: TcpStream, config: &Config, version: i32) -> Box<dyn 
 	}
 }
 
-struct DummyHandler {
-	conn: TcpStream
-}
+const SUPPORTED_VERSIONS: &[i32] = &[754];
 
-#[async_trait]
-impl ModernVersion for DummyHandler {
-	async fn new(conn: TcpStream, _config: &Config) -> Box<Self> {
-		Box::new(Self {
-			conn
-		})
-	}
-}
-
-#[async_trait]
-impl ProtocolHandler for DummyHandler {
-	async fn disconnect(&mut self, reason: String) -> Result<()> {
-		todo!()
-	}
+pub fn supported(version: i32) -> bool {
+	SUPPORTED_VERSIONS.contains(&version)
 }
