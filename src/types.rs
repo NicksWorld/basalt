@@ -2,6 +2,7 @@ use ::async_trait::async_trait;
 use ::std::{
 	error::Error,
 	fmt::{self, Display, Formatter},
+	io,
 };
 
 #[derive(Debug)]
@@ -24,4 +25,11 @@ impl Display for BasaltError {
 impl Error for BasaltError {}
 
 #[async_trait]
-pub trait ProtocolHandler {}
+pub trait ProtocolHandler {
+	async fn disconnect(&mut self, reason: String) -> io::Result<()>;
+}
+
+pub enum ProtocolState {
+	Login,
+	Play,
+}

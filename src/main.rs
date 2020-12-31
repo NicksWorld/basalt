@@ -11,6 +11,7 @@ mod modern;
 mod server;
 mod status;
 mod types;
+mod util;
 
 use config::Config;
 use server::Server;

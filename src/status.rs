@@ -1,20 +1,22 @@
 use ::serde_json::json;
 use ::std::io::Result;
+use ::tokio::{io::AsyncWriteExt, net::TcpStream};
 
-use crate::config::Config;
-use crate::connection::{ClassicConnection, ModernConnection};
+use crate::{
+	config::Config,
+	util,
+};
 
-pub async fn classic(conn: &mut ClassicConnection, config: &Config) -> Result<()> {
+pub async fn classic(conn: &mut TcpStream, config: &Config) -> Result<()> {
 	use crate::classic::types::ClassicEncodable;
-	todo!();
-	Ok(())
+	todo!()
 }
 
-pub async fn modern(conn: &mut ModernConnection, config: &Config, version: i32) -> Result<()> {
+pub async fn modern(conn: &mut TcpStream, config: &Config, version: i32) -> Result<()> {
 	use crate::modern::types::{ModernEncodable, VarInt};
 	'status: loop {
-		let length = conn.read::<VarInt>().await?;
-		let id = conn.read::<VarInt>().await?;
+		let length = VarInt::async_read(conn).await?;
+		let id = VarInt::async_read(conn).await?;
 		match id.raw {
 			0 => {
 				let id = VarInt::from(0);
@@ -33,18 +35,15 @@ pub async fn modern(conn: &mut ModernConnection, config: &Config, version: i32) 
 					}
 				})
 				.to_string();
-				let length = id.size().await + status.size().await;
-				conn.write(VarInt::from(length as i32)).await?;
-				conn.write(id).await?;
-				conn.write(status).await?;
-				conn.flush().await?;
+				let mut buffer = Vec::new();
+				id.write(&mut buffer)?;
+				status.write(&mut buffer)?;
+				conn.write(&util::prepend_length(buffer)).await?;
 			}
 			1 => {
-				let payload = conn.read::<i64>().await?;
-				conn.write(length).await?;
-				conn.write(id).await?;
-				conn.write(payload).await?;
-				conn.flush().await?;
+				let payload = i64::async_read(conn).await?;
+				id.async_write(conn).await?;
+				payload.async_write(conn).await?;
 				break 'status;
 			}
 			_ => {}

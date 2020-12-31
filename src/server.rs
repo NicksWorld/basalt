@@ -6,7 +6,7 @@ use crate::{
 	auth::Authentication,
 	config::Config,
 	connection::Connection,
-	modern::{self, types::VarInt},
+	modern::{self, types::{ModernEncodable, VarInt}},
 	status,
 };
 
@@ -25,7 +25,7 @@ impl Server {
 						let connection = Connection::java(sock).await.unwrap();
 						match connection {
 							Connection::Classic(mut conn) => {
-								let id = conn.read::<u8>().await.unwrap();
+								let id = u8::async_read(&mut conn).await.unwrap();
 								if id == 0xFE {
 									status::classic(&mut conn, &config).await.unwrap();
 								} else if id == 0x00 {
@@ -33,12 +33,12 @@ impl Server {
 								}
 							}
 							Connection::Modern(mut conn) => {
-								let _length: i32 = conn.read::<VarInt>().await.unwrap().into();
-								let id: i32 = conn.read::<VarInt>().await.unwrap().into();
-								let version: i32 = conn.read::<VarInt>().await.unwrap().into();
-								let _address = conn.read::<String>().await.unwrap();
-								let _port = conn.read::<u16>().await.unwrap();
-								let next: i32 = conn.read::<VarInt>().await.unwrap().into();
+								let _length: i32 = VarInt::async_read(&mut conn).await.unwrap().into();
+								let id: i32 = VarInt::async_read(&mut conn).await.unwrap().into();
+								let version: i32 = VarInt::async_read(&mut conn).await.unwrap().into();
+								let _address = String::async_read(&mut conn).await.unwrap();
+								let _port = u16::async_read(&mut conn).await.unwrap();
+								let next: i32 = VarInt::async_read(&mut conn).await.unwrap().into();
 								if id == 0 {
 									if next == 1 {
 										status::modern(&mut conn, &config, version).await.unwrap();
