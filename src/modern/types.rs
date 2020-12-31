@@ -8,6 +8,8 @@ use ::uuid::Uuid;
 
 use crate::types::BasaltError;
 
+pub mod chat;
+
 #[async_trait]
 pub trait ModernEncodable {
 	async fn async_read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self>
