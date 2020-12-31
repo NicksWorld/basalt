@@ -27,6 +27,9 @@ impl Error for BasaltError {}
 #[async_trait]
 pub trait ProtocolHandler {
 	async fn disconnect(&mut self, reason: String) -> io::Result<()>;
+	fn is_dummy(&self) -> bool {
+		false
+	}
 }
 
 pub enum ProtocolState {

@@ -13,7 +13,7 @@ impl Yggdrasil {
 		let keypair = Rsa::generate(1024)?;
 		Ok(Yggdrasil {
 			keypair,
-			url: config.authentication.yggdrasil.url.clone()
+			url: config.authentication.yggdrasil.url.clone(),
 		})
 	}
 }

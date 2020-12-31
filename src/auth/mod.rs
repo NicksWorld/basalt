@@ -36,7 +36,7 @@ impl Authentication {
 		Ok(Authentication {
 			legacy,
 			microsoft,
-			yggdrasil
+			yggdrasil,
 		})
 	}
 }

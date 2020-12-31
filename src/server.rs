@@ -6,7 +6,10 @@ use crate::{
 	auth::Authentication,
 	config::Config,
 	connection::Connection,
-	modern::{self, types::{ModernEncodable, VarInt}},
+	modern::{
+		self,
+		types::{ModernEncodable, VarInt},
+	},
 	status,
 };
 
@@ -33,9 +36,11 @@ impl Server {
 								}
 							}
 							Connection::Modern(mut conn) => {
-								let _length: i32 = VarInt::async_read(&mut conn).await.unwrap().into();
+								let _length: i32 =
+									VarInt::async_read(&mut conn).await.unwrap().into();
 								let id: i32 = VarInt::async_read(&mut conn).await.unwrap().into();
-								let version: i32 = VarInt::async_read(&mut conn).await.unwrap().into();
+								let version: i32 =
+									VarInt::async_read(&mut conn).await.unwrap().into();
 								let _address = String::async_read(&mut conn).await.unwrap();
 								let _port = u16::async_read(&mut conn).await.unwrap();
 								let next: i32 = VarInt::async_read(&mut conn).await.unwrap().into();
@@ -43,8 +48,9 @@ impl Server {
 									if next == 1 {
 										status::modern(&mut conn, &config, version).await.unwrap();
 									} else if next == 2 {
-										modern::handler(conn, &config, version)
-											.await;
+										let handler = modern::handler(conn, &config, version).await;
+										// TODO: Pass the handler to the player object
+										todo!();
 									} else {
 										// ...
 									}
@@ -64,9 +70,6 @@ impl Server {
 		let auth = Authentication::new(config).await?;
 		let jaddr = SocketAddr::new(config.network.bind.parse().unwrap(), config.network.port);
 		let java = TcpListener::bind(jaddr).await?;
-		Ok(Self {
-			auth,
-			java,
-		})
+		Ok(Self { auth, java })
 	}
 }

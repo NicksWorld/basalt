@@ -8,15 +8,13 @@ use crate::{
 };
 
 pub struct DummyHandler {
-	conn: TcpStream
+	conn: TcpStream,
 }
 
 #[async_trait]
 impl ModernVersion for DummyHandler {
 	async fn new(conn: TcpStream, _config: &Config) -> Box<Self> {
-		Box::new(Self {
-			conn
-		})
+		Box::new(Self { conn })
 	}
 }
 
@@ -24,5 +22,9 @@ impl ModernVersion for DummyHandler {
 impl ProtocolHandler for DummyHandler {
 	async fn disconnect(&mut self, reason: String) -> Result<()> {
 		todo!()
+	}
+
+	fn is_dummy(&self) -> bool {
+		true
 	}
 }

@@ -1,10 +1,7 @@
 use ::async_trait::async_trait;
 use ::tokio::net::TcpStream;
 
-use crate::{
-	config::Config,
-	types::ProtocolHandler,
-};
+use crate::{config::Config, types::ProtocolHandler};
 
 mod dummy;
 pub mod types;

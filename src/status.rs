@@ -2,10 +2,7 @@ use ::serde_json::json;
 use ::std::io::Result;
 use ::tokio::{io::AsyncWriteExt, net::TcpStream};
 
-use crate::{
-	config::Config,
-	util,
-};
+use crate::{config::Config, util};
 
 pub async fn classic(conn: &mut TcpStream, config: &Config) -> Result<()> {
 	use crate::classic::types::ClassicEncodable;
@@ -20,7 +17,7 @@ pub async fn modern(conn: &mut TcpStream, config: &Config, version: i32) -> Resu
 		0
 	};
 	'status: loop {
-		let length = VarInt::async_read(conn).await?;
+		let _length = VarInt::async_read(conn).await?;
 		let id = VarInt::async_read(conn).await?;
 		match id.raw {
 			0 => {

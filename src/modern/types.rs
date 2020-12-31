@@ -10,9 +10,13 @@ use crate::types::BasaltError;
 
 #[async_trait]
 pub trait ModernEncodable {
-	async fn async_read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self> where Self: Sized;
+	async fn async_read<R: AsyncReadExt + Send + Unpin>(stream: &mut R) -> Result<Self>
+	where
+		Self: Sized;
 	async fn async_write<W: AsyncWriteExt + Send + Unpin>(&self, stream: &mut W) -> Result<()>;
-	fn read<R: Read>(stream: &mut R) -> Result<Self> where Self: Sized;
+	fn read<R: Read>(stream: &mut R) -> Result<Self>
+	where
+		Self: Sized;
 	fn write<W: Write>(&self, stream: &mut W) -> Result<()>;
 }
 
